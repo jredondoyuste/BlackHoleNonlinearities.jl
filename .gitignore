@@ -1,0 +1,10 @@
+# .gitignore
+
+.DS_Store
+.vscode/
+*.code-workspace
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+.jupyter/
+.private/
+
