@@ -80,7 +80,7 @@ function extract_amps(sol, ω, rext)
     rs=rext + 2*log(rext/2 - 1)
     f=1-2/rext
     ϕ, ψ = sol(rext)
-    aout = 0.5*(f*ψ/(im*ω) + ϕ)*exp(-im*ω*rext)
-    ain = 0.5*(-f*ψ/(im*ω) + ϕ)*exp(-im*ω*rext)
+    aout = 0.5*(f*ψ/(im*ω) + ϕ)*exp(-im*ω*rs)
+    ain = 0.5*(-f*ψ/(im*ω) + ϕ)*exp(-im*ω*rs)
     return [ain, aout]
 end
