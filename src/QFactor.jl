@@ -1,8 +1,17 @@
+"""
+Module for computing Q-factor of black hole nonlinear mode.
+"""
 import DifferentialEquations as DE
 import Integrals
 include("HomogeneousSolutions.jl")
 include("Source.jl")
 
+"""
+    qfactor(ω, rmin, rmax, solver_lin, solver_scd, oo, atol, rtol)
+
+Compute Q-factor for frequency ω.
+Solves linear problem, second-order problem, and integrates source term.
+"""
 function qfactor(ω::Float64, rmin=5, rmax=10^5, solver_lin="default", solver_scd="verne", oo=8,atol=1e-7,rtol=1e-7)
     sol1 = linear_sol(2, ω, "odd", rmin, rmax, solver_lin,atol,rtol)
     _, aout1 = extract_amps(sol1, ω, rmax)

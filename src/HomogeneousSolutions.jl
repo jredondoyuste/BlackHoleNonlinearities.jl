@@ -1,28 +1,58 @@
+"""
+Module for solving homogeneous Regge-Wheeler and Zerilli equations for black hole perturbations.
+"""
+
 import DifferentialEquations as DE
 using ADTypes
 
+"""
+    VRW(r, l)
+
+Regge-Wheeler potential as a function of radial coordinate r and multipole l.
+"""
 function VRW(r,l)
     return @. (-(6 / r^3) + (l * (1 + l)) / r^2) * (1 - 2 / r)
 end
 
+"""
+    VZ(r, l)
+
+Zerilli potential as a function of radial coordinate r and multipole l.
+"""
 function VZ(r,l)
     numerator = @. (-2 + r) * (72 + (-2 + l + l^2) * r * (36 + (-1 + l) * (2 + l) * r * (6 + l * (1 + l) * r)))
     denominator = @. r^4 * (6 + (-2 + l + l^2) * r)^2
     return numerator ./ denominator
 end
 
+"""
+    reggewheeler(du, u, p, t)
+
+ODE system for Regge-Wheeler equation. u = [ϕ, ψ], p = [ω, l].
+"""
 function reggewheeler(du, u, p, t)
     ϕ, ψ = u
     du[1] = ψ
     du[2] = - 2*ψ/(t*(t-2)) + (VRW(t,p[2])-p[1]^2)*ϕ/((1-2/t)^2)
 end
 
+"""
+    zerilli(du, u, p, t)
+
+ODE system for Zerilli equation. u = [ϕ, ψ], p = [ω, l].
+"""
 function zerilli(du, u, p, t)
     ϕ, ψ = u
     du[1] = ψ
     du[2] = - 2*ψ/(t*(t-2)) + (VRW(t,p[2])-p[1]^2)*ϕ/((1-2/t)^2)
 end
 
+"""
+    bc_rw(l, w, r)
+
+Boundary condition for Regge-Wheeler equation at r ≈ 2 (near horizon).
+Returns [ϕ, ψ] as power series in (r-2).
+"""
 function bc_rw(l::Int, w::Float64, r::Float64)
     a1 = (1im*(-3 + l + l^2))/(2*1im + 8*w)
     a2 = -1/16*(12 + l*(1 + l)*(-6 + l + l^2 + (8*1im)*w) - (36*1im)*w)/(-1 + (6*1im)*w + 8*w^2)
@@ -40,6 +70,12 @@ function bc_rw(l::Int, w::Float64, r::Float64)
     return [ϕ*exp(-im*w*r),(ψ-im*w*r*ϕ/(r-2))*exp(-im*w*r)]
 end
 
+"""
+    bc_z(l, w, r)
+
+Boundary condition for Zerilli equation at r ≈ 2 (near horizon).
+Returns [ϕ, ψ] as power series in (r-2).
+"""
 function bc_z(l::Int, w::Float64, r::Float64)
     a1=((1im/2)*(3 - 2*l - l^2 + 2*l^3 + l^4))/((1 + l + l^2)*(1im + 4*w))
     a2=(-24 - 4*l^7 - l^8 + 8*l^5*(1 - (3*1im)*w) + l^4*(-2 - (4*1im)*w) + l^6*(-2 - (8*1im)*w) + 10*l*(3 - (8*1im)*w) + l^3*(-22 + (32*1im)*w) + l^2*(17 - (60*1im)*w) + (36*1im)*w)/(16*(1 + l + l^2)^2*(-1 + (6*1im)*w + 8*w^2))
@@ -57,6 +93,13 @@ function bc_z(l::Int, w::Float64, r::Float64)
     return [ϕ*exp(-im*w*r),(ψ-im*w*r*ϕ/(r-2))*exp(-im*w*r)]
 end
 
+"""
+    linear_sol(l, ω, parity, rmin, rmax, solver, atol, rtol)
+
+Solve homogeneous equation from near-horizon to large distance.
+Parity: "even" (Zerilli) or "odd" (Regge-Wheeler).
+Returns solution object.
+"""
 function linear_sol(l::Int, ω::Float64, parity::String, rmin, rmax, solver="default", atol=1e-12, rtol=1e-12)
     tspan = (2+10.0^(-rmin), rmax)
     p = [ω, l]
@@ -76,6 +119,12 @@ function linear_sol(l::Int, ω::Float64, parity::String, rmin, rmax, solver="def
     return sol
 end
 
+"""
+    extract_amps(sol, ω, rext)
+
+Extract ingoing and outgoing wave amplitudes at radius rext.
+Returns [a_in, a_out].
+"""
 function extract_amps(sol, ω, rext)
     rs=rext + 2*log(rext/2 - 1)
     f=1-2/rext
