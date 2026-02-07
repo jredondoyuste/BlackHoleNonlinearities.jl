@@ -1,7 +1,7 @@
 """
 Module for computing Q-factor of black hole nonlinear mode.
 """
-import DifferentialEquations as DE
+# import DifferentialEquations as DE
 import Integrals
 include("HomogeneousSolutions.jl")
 include("Source.jl")

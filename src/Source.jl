@@ -8,11 +8,19 @@ Module for nonlinear source terms in black hole perturbation equations.
 Second-order source from odd-odd coupling for even parity.
 Computed from linear solution sol at frequency w and radius r.
 """
-function SOOE(sol, w, r)
+function OLD_SOOE(sol, w, r)
     ϕ, ψ = sol(r)
     f1 = @. (1728 + 5184*r - 15984*r^2 + r^5*(25254 - 2032*w^2) + r^4*(42174 - 696*w^2) - 12*r^8*w^2*(594 + w^2) - 4*r^3*(10269 + 20*w^2) - 6*r^6*(18801 + 40*w^2) + r^7*(47790 + 2187*w^2 - 4*w^4) - 756*r^2*(1 + 3*r)^2*(-16 + 26*r - 13*r^2 + 2*r^3)*log(r))/(1890*sqrt(pi)*r^8*(1 + 3*r)^2)
     f2 = @. ((-2 + r)^2*(-288 - 1404*r - 468*r^2 - 2106*r^5 + r^3*(3546 + 4*w^2) + 3*r^4*(-81 + 8*w^2) + 126*r^2*(-13 - 69*r - 63*r^2 + 18*r^3)*log(r)))/(945*sqrt(pi)*r^7*(1 + 3*r)^2)
     f3 = @. -1/1890*((-2 + r)^2*(-168 - 852*r - 108*r^2 + 6*r^4*(855 + 2*w^2) + r^3*(2817 + 4*w^2)))/(sqrt(pi)*r^6*(1 + 3*r)^2)
+    return @. f1*ϕ^2 + f2*ϕ*ψ + f3*ψ^2
+end
+
+function SOOE(sol, w, r)
+    ϕ, ψ = sol(r)
+    f1 = @. (1728 + 5184*r - 9936*r^2 + r^4*(55782 - 696*w^2) - 12*r^8*w^2*(90 + w^2) - 4*r^3*(2961 + 20*w^2) - 24*r^6*(2196 + 31*w^2) - 2*r^5*(11817 + 1016*w^2) + r^7*(26244 + 2691*w^2 - 4*w^4))/(1890*sqrt(pi)*r^8*(1 + 3*r)^2)
+    f2 = @. -1/945*((-2 + r)^2*(288 + 1404*r + 720*r^2 + 4374*r^5 - 6*r^4*(-639 + 4*w^2) - r^3*(1845 + 4*w^2)))/(sqrt(pi)*r^7*(1 + 3*r)^2)
+    f3 = @. -1/1890*((-2 + r)^2*(-168 - 852*r - 612*r^2 + 6*r^4*(99 + 2*w^2) + r^3*(-207 + 4*w^2)))/(sqrt(pi)*r^6*(1 + 3*r)^2)
     return @. f1*ϕ^2 + f2*ϕ*ψ + f3*ψ^2
 end
 
