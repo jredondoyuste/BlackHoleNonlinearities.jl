@@ -1,0 +1,86 @@
+\documentclass[border=0mm,10pt]{standalone}
+\RequirePackage{shellesc, luatex85}
+
+\usepackage{tikz}
+\usepackage{tikz-3dplot}
+\usepackage{pgfplots}
+\usepackage{bm}
+\usepgfplotslibrary{fillbetween}
+\usepgfplotslibrary{groupplots}
+\usepackage{pgfplotstable}
+\pgfplotsset{compat=1.18}
+
+\usepgfplotslibrary{groupplots}
+\definecolor{lightpeach}{RGB}{255,229,180}  % Very pale, warm peach
+\definecolor{apricot}{RGB}{255,205,117}  % Soft, light orange
+\definecolor{amberglow}{RGB}{255,160,58}  % Bright, golden amber
+\definecolor{sunsetorange}{RGB}{255,120,40} % Vivid, warm orange
+\definecolor{coralrose}{RGB}{255,94,77}  % Strong, coral red
+\definecolor{burntsienna}{RGB}{220,70,40}  % Deep, earthy red-orange
+\definecolor{russet}{RGB}{170,50,30}   % Dark, muted red-brown
+
+\definecolor{icemist}{RGB}{220,240,255}  % Very pale, icy blue
+\definecolor{mistlavender}{RGB}{180,200,255} % Pale, bluish lavender
+\definecolor{glacierblue}{RGB}{130,180,255} % Clear, icy blue
+\definecolor{frostedteal}{RGB}{58,183,183} % Cool, teal-leaning blue
+\definecolor{deepcerulean}{RGB}{0,123,167} % Strong, balanced blue
+\definecolor{midnightblue}{RGB}{0,70,140}  % Deep, cold blue
+\definecolor{arcticnavy}{RGB}{20,40,80}  % Very dark, cold navy
+
+\definecolor{deepcerulean}{RGB}{0,123,167}  % Strong, balanced blue
+\definecolor{sageleaf}{RGB}{141,182,0}  % Muted, natural green
+\definecolor{crimsonred}{RGB}{200,50,70}  % Clear, vivid red
+\definecolor{tealstone}{RGB}{0,105,98}   % Cool, dark teal
+\definecolor{ambergold}{RGB}{230,150,40}  % Warm, rich gold-orange
+\definecolor{lilacmist}{RGB}{150,110,180}  % Soft, light lilac-purple
+
+\newcommand{\scale}{6250}
+
+
+ \def\axisdefaultwidth{9.52cm}
+ \def\axisdefaultheight{7.13829cm}
+  \pgfplotsset{
+enlarge x limits=false, 
+every major tick/.append style={line width=0.125mm, black}, 
+major tick length=1.1mm, 
+minor tick length=0.75mm,
+every minor tick/.append style={black},
+every axis legend/.append style={font=\small},legend cell align={left}
+}
+
+
+\pgfmathdeclarefunction{slogc}{2}{%
+  \pgfmathparse{%
+    (abs(#1) <= #2) ? (#1/#2) : ( ((#1<0) ? -1 : 1) * (1 + ln(abs(#1/#2))/ln(10)) )
+  }%
+}
+
+\begin{document}
+\begin{tikzpicture}
+  \begin{axis}[
+    xlabel={\(r_*/M\)}, ylabel={Source},
+    ymode=log,           
+    xtick={-2.3, 0, 2.3, 3.3, 4.3},
+    xticklabels={$-10^1$,$0$,$10^1$,$10^2$,$10^3$},
+    ymin=1e-6,ymax=1e3,
+     legend style={
+        		at={(0.02,0.98)},
+		anchor=north west,
+		font=\fontsize{7}{8}\selectfont},
+  ]
+      \addplot[x filter/.code={\pgfmathsetmacro\pgfmathresult{slogc(\pgfmathresult,0.5)}},color=crimsonred, semithick]
+      table[x=rs,y=sbad] {../data/source.dat};
+     \addlegendentry{Original};
+    \addplot[x filter/.code={\pgfmathsetmacro\pgfmathresult{slogc(\pgfmathresult,0.5)}},color=midnightblue, semithick]
+      table[x=rs,y=sreg] {../data/source.dat};
+     \addlegendentry{Regularised};
+      \addplot[x filter/.code={\pgfmathsetmacro\pgfmathresult{slogc(\pgfmathresult,0.5)}},color=black, thin, densely dashed]
+      table[x=rs,y=close] {../data/source.dat};
+     \addlegendentry{\(r-2M\)};
+     \addplot[x filter/.code={\pgfmathsetmacro\pgfmathresult{slogc(\pgfmathresult,0.5)}},color=black, densely dotted]
+      table[x=rs,y=far] {../data/source.dat};
+     \addlegendentry{\(1/r^2\)};
+  \end{axis}
+\end{tikzpicture}
+
+\end{document}
