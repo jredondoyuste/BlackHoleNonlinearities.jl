@@ -66,9 +66,11 @@ every axis legend/.append style={font=\small},legend cell align={left}
   \addplot[color=sageleaf, semithick] table[x=w,y=q] {../data/q4_vals.dat};
   \addlegendentry{\(\ell=4\)};
   \addplot[black, densely dashed, thin, domain=0:1.0] ({0.405},{x});
-  \node[left] at (0.4,0.25) {\(\Re(\omega_{\rm 400})/2\)};
+  \node[left] at (0.4,0.25) {\small \(\Re(\omega_{\rm 400})/2\)};
   \addplot[black, densely dashed, thin, domain=0:1.0] ({0.606},{x});
-  \node[left] at (0.586,0.45) {\(\Re(\omega_{\rm 600})/2\)};
+  \node[left] at (0.586,0.45) {\small \(\Re(\omega_{\rm 600})/2\)};
+  \addplot[black, densely dashed, thin, domain=0:1.0] ({0.803},{x});
+  \node[left] at (0.795,0.85) {\small \(\Re(\omega_{\rm 800})/2\)};
   \end{axis}
 
 \end{tikzpicture}
