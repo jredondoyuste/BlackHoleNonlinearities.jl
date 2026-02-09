@@ -8,3 +8,10 @@
 .jupyter/
 .private/
 
+# LaTeX build artifacts
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.synctex.gz
+
