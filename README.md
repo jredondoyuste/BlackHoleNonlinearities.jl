@@ -18,7 +18,14 @@ Jaime Redondo-Yuste
 If you find this code useful, please cite
 
 ```
-@citation{}
+@aritcle{Cardoso:2026xxx,
+    author = "Cardoso, Vitor and Redondo-Yuste, Jaime and Sperhake, Ulrich and Tuncer, Furkan", 
+    title = "{Nonlinear Dynamics in General Relativity}",
+    eprint = "2603.xxxx",
+    archivePrexid="arXiv",
+    primaryClass = "gr-qc",
+    year = "2026"
+}
 ```
 
 This code builds upon the [QuadraticQNM](https://github.com/akuntz00/QuadraticQNM) package by Adrien Kuntz and Bruno Bucciotti. 
