@@ -18,12 +18,13 @@ Jaime Redondo-Yuste
 If you find this code useful, please cite
 
 ```
-@aritcle{Cardoso:2026xxx,
-    author = "Cardoso, Vitor and Redondo-Yuste, Jaime and Sperhake, Ulrich and Tuncer, Furkan", 
+@article{Cardoso:2026llh,
+    author = "Cardoso, Vitor and Redondo-Yuste, Jaime and Sperhake, Ulrich and Tuncer, Furkan",
     title = "{Nonlinear Dynamics in General Relativity}",
-    eprint = "2603.xxxx",
-    archivePrexid="arXiv",
+    eprint = "2603.04501",
+    archivePrefix = "arXiv",
     primaryClass = "gr-qc",
+    month = "3",
     year = "2026"
 }
 ```
