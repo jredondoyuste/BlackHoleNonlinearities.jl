@@ -1,0 +1,85 @@
+\documentclass[border=0mm,10pt]{standalone}
+\RequirePackage{shellesc, luatex85}
+
+\usepackage{tikz}
+\usepackage{tikz-3dplot}
+\usepackage{pgfplots}
+\usepackage{bm}
+\usepgfplotslibrary{fillbetween}
+\usepgfplotslibrary{groupplots}
+\usepackage{pgfplotstable}
+\pgfplotsset{compat=1.18}
+
+\usepgfplotslibrary{groupplots}
+\definecolor{lightpeach}{RGB}{255,229,180}  % Very pale, warm peach
+\definecolor{apricot}{RGB}{255,205,117}  % Soft, light orange
+\definecolor{amberglow}{RGB}{255,160,58}  % Bright, golden amber
+\definecolor{sunsetorange}{RGB}{255,120,40} % Vivid, warm orange
+\definecolor{coralrose}{RGB}{255,94,77}  % Strong, coral red
+\definecolor{burntsienna}{RGB}{220,70,40}  % Deep, earthy red-orange
+\definecolor{russet}{RGB}{170,50,30}   % Dark, muted red-brown
+
+\definecolor{icemist}{RGB}{220,240,255}  % Very pale, icy blue
+\definecolor{mistlavender}{RGB}{180,200,255} % Pale, bluish lavender
+\definecolor{glacierblue}{RGB}{130,180,255} % Clear, icy blue
+\definecolor{frostedteal}{RGB}{58,183,183} % Cool, teal-leaning blue
+\definecolor{deepcerulean}{RGB}{0,123,167} % Strong, balanced blue
+\definecolor{midnightblue}{RGB}{0,70,140}  % Deep, cold blue
+\definecolor{arcticnavy}{RGB}{20,40,80}  % Very dark, cold navy
+
+\definecolor{deepcerulean}{RGB}{0,123,167}  % Strong, balanced blue
+\definecolor{sageleaf}{RGB}{141,182,0}  % Muted, natural green
+\definecolor{crimsonred}{RGB}{200,50,70}  % Clear, vivid red
+\definecolor{tealstone}{RGB}{0,105,98}   % Cool, dark teal
+\definecolor{ambergold}{RGB}{230,150,40}  % Warm, rich gold-orange
+\definecolor{lilacmist}{RGB}{150,110,180}  % Soft, light lilac-purple
+
+\newcommand{\scale}{6250}
+
+
+ \def\axisdefaultwidth{9.52cm}
+ \def\axisdefaultheight{7.13829cm}
+ \pgfplotsset{
+enlarge x limits=false, 
+every major tick/.append style={line width=0.125mm, black}, 
+major tick length=1.1mm, 
+minor tick length=0.75mm,
+every minor tick/.append style={black},
+every axis legend/.append style={font=\small},legend cell align={left}
+}
+
+\begin{document}
+
+    \begin{tikzpicture}
+    \pgfplotstableread{../data/convergence_ooo_adrien.dat}{\dat}
+    \pgfplotstableread{../data/convergence_ooo_bruno.dat}{\datb}
+    
+    \begin{semilogyaxis}[
+        xlabel={\( \Lambda \)},
+        ylabel={\(|\mathcal{Q}_{(2,1)\times (3,-1) \to (2,0)}|\)},
+        ymin=8e-4,	ymax=0.1,
+        xmin=3,	xmax=5.0,
+        legend style={
+                 legend columns=2,
+        		at={(0.02,0.02)},
+		anchor=south west,
+		font=\fontsize{7}{8}\selectfont
+	},
+    ]
+    \addplot[color=russet,thick] table [x={lambda}, y={w1}]{\dat};
+    \addlegendentry{\(\Omega_d M = 0.1\)};
+    \addplot[color=amberglow,thick] table [x={lambda}, y={w2}]{\dat};
+    \addlegendentry{\(\Omega_d M = 0.3\)};
+    \addplot[color=sageleaf,thick] table [x={lambda}, y={w3}]{\dat};
+    \addlegendentry{\(\Omega_d M = 0.5\)};
+    \addplot[color=midnightblue,thick] table [x={lambda}, y={w4}]{\dat};
+    \addlegendentry{\(\Omega_d M = 0.7\)};
+    \addplot[color=russet,thick, densely dashed] table [x={lambda}, y={w1}]{\datb};
+    \addplot[color=amberglow,thick, densely dashed] table [x={lambda}, y={w2}]{\datb};
+    \addplot[color=sageleaf,thick, densely dashed] table [x={lambda}, y={w3}]{\datb};
+    \addplot[color=midnightblue,thick, densely dashed] table [x={lambda}, y={w4}]{\datb};
+    
+    \end{semilogyaxis}
+    \end{tikzpicture}
+
+\end{document}

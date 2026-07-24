@@ -8,6 +8,8 @@
 .jupyter/
 .private/
 
+data/*
+
 # LaTeX build artifacts
 *.aux
 *.fdb_latexmk
