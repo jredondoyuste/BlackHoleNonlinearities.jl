@@ -14,7 +14,7 @@ overlaid.
 Data files: ../data_PM/*.dat
 Header (2 lines):
     # w  |Q1|/w  |Q2|/w  err/w
-    # parity=ooe l1=2 l2=2 l=4 m1=2 m2=2 source=bruno lambda1=3.0 lambda2=3.5
+    # parity=ooe l1=2 l2=2 l=4 m1=2 m2=2 lambda1=3.0 lambda2=3.5
 Columns: w  |Q1|/w  |Q2|/w  err/w
   |Q2| is the better-converged estimate (central value);
   err = ||Q1| - |Q2||.

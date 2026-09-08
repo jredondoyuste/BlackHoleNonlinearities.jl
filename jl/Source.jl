@@ -1,36 +1,34 @@
-"""
-Source terms for black hole perturbation equations at 2nd order.
+include("generated/SourceEEE.jl")
+include("generated/SourceEEO.jl")
+include("generated/SourceEOE.jl")
+include("generated/SourceEOO.jl")
+include("generated/SourceOOE.jl")
+include("generated/SourceOOO.jl")
 
-Public API:
-  S_OOO(sol1, sol2, ω1, ω2, l1, l2, l, m1, m2, r)        # OOO, Bruno's (canonical)
-  S_OOO_adrien(sol1, sol2, ω1, ω2, l1, l2, l, m1, m2, r) # OOO, Adrien's (legacy)
-  S_OOE(sol1, sol2, ω1, ω2, l1, l2, l, m1, m2, r)        # OOE, Bruno's (canonical)
+const SECTORS = ("eee", "eeo", "eoe", "eoo", "ooe", "ooo")
 
-Other sectors (OEO, OEE, EOO, EOE, EEE) are not yet implemented.
-"""
+function coefficients(sector::String, l1, l2, l, m1, m2, ω1, ω2; kw...)
+    sector == "eee" && return coefficients_eee(l1, l2, l, m1, m2, ω1, ω2; kw...)
+    sector == "eeo" && return coefficients_eeo(l1, l2, l, m1, m2, ω1, ω2; kw...)
+    sector == "eoe" && return coefficients_eoe(l1, l2, l, m1, m2, ω1, ω2; kw...)
+    sector == "eoo" && return coefficients_eoo(l1, l2, l, m1, m2, ω1, ω2; kw...)
+    sector == "ooe" && return coefficients_ooe(l1, l2, l, m1, m2, ω1, ω2; kw...)
+    sector == "ooo" && return coefficients_ooo(l1, l2, l, m1, m2, ω1, ω2; kw...)
+    error("Source for $sector not implemented")
+end
 
-# Internal implementations — do NOT edit math expressions inside these files
-include("SourceOOO.jl")
-include("SourceOOE.jl")
+function source(sector::String, cf, ϕ1, ψ1, ϕ2, ψ2, r)
+    sector == "eee" && return source_eee(cf, ϕ1, ψ1, ϕ2, ψ2, r)
+    sector == "eeo" && return source_eeo(cf, ϕ1, ψ1, ϕ2, ψ2, r)
+    sector == "eoe" && return source_eoe(cf, ϕ1, ψ1, ϕ2, ψ2, r)
+    sector == "eoo" && return source_eoo(cf, ϕ1, ψ1, ϕ2, ψ2, r)
+    sector == "ooe" && return source_ooe(cf, ϕ1, ψ1, ϕ2, ψ2, r)
+    sector == "ooo" && return source_ooo(cf, ϕ1, ψ1, ϕ2, ψ2, r)
+    error("Source for $sector not implemented")
+end
 
-"""
-    S_OOO(sol1, sol2, ω1, ω2, l1, l2, l, m1, m2, r)
-
-Odd×odd→odd source term (canonical, Bruno's derivation).
-"""
-S_OOO(args...) = SOOO_bruno(args...)
-
-"""
-    S_OOO_adrien(sol1, sol2, ω1, ω2, l1, l2, l, m1, m2, r)
-
-Odd×odd→odd source term (Adrien's legacy derivation).
-"""
-S_OOO_adrien(args...) = SOOO(args...)
-
-"""
-    S_OOE(sol1, sol2, ω1, ω2, l1, l2, l, m1, m2, r)
-
-Odd×odd→even source term (canonical, Bruno's derivation).
-Output drives the Zerilli equation.
-"""
-S_OOE(args...) = SOOE_bruno(args...)
+function make_source(sector, sol1, sol2, l1, l2, l, m1, m2, ω1, ω2; kw...)
+    cf = coefficients(sector, l1, l2, l, m1, m2, ω1, ω2; kw...)
+    # float(r): integer r overflows Int64 in the r^n terms of the generated sources
+    r -> (r = float(r); u1 = sol1(r); u2 = sol2(r); source(sector, cf, u1[1], u1[2], u2[1], u2[2], r))
+end

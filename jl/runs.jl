@@ -1,77 +1,36 @@
 """
-General runner script for nonlinear QNM computations (all parity sectors).
-Usage: julia --project=<path> runs.jl <mode> <parity> [args...]
+CLI driver for nonlinear QNM computations (all sectors). Main entry: run as a script.
+Usage: julia --project=<path> runs.jl <mode> <sector> [args...]
 
-Modes:
-  source   parity l1 l2 l m1 m2 omega rmin rmax npts [source]
-      → evaluate source term S(r) along a radial grid
+  source   sector l1 l2 l m1 m2 omega rmin rmax npts             → S(r) along a radial grid
+  qfactor  sector l1 l2 l m1 m2 omega [lambda1 lambda2] [c1m1]   → Q_h at two domains + diff
+  qscan    sector l1 l2 l m1 m2 omega_min omega_max npts [lambda1 lambda2]   → 1D ω scan
+  qscan2d  sector l1 l2 l m1 m2 w1_min w1_max n1 w2_min w2_max n2 [lambda1 lambda2]  → 2D (ω1,ω2) scan
 
-  qfactor  parity l1 l2 l m1 m2 omega [lambda1 lambda2] [source]
-      → compute Q_h at two integration domains, print both + difference
+sector: one of SECTORS; XYZ = parity of mode1, mode2, output ("e"=even/Zerilli, "o"=odd/RW).
+lambda1/lambda2: rmin=λ+1, rmax=10^(λ-1)/(2ω1); defaults 4.0/5.0.
+c1m1: qfactor only, free regularization constant passed as cfree=(c1m1=c1m1,); default 0.0.
 
-  qscan    parity l1 l2 l m1 m2 omega_min omega_max npts [lambda1 lambda2] [source]
-      → 1D frequency scan: |Q_h| at two lambda values per ω; err = ||Q1| - |Q2||
-
-  qscan2d  parity l1 l2 l m1 m2 w1_min w1_max n1 w2_min w2_max n2 [lambda1 lambda2] [source]
-      → 2D scan over independent (ω1, ω2): Q_h at two lambda values, columns include ΔQ
-      sol1(l1,ω1) is cached across the inner ω2 loop (n1 × n2 − n1 fewer ODE solves)
-
-Arguments:
-  parity          "ooo" or "ooe" (error if not implemented)
-  lambda1/lambda2 integration-domain scale: rmin = λ+1, rmax = 10^(λ-1)/(2ω1)
-                  defaults: lambda1=4.0  lambda2=5.0
-  source          "bruno" (default) or "adrien" (OOO only)
-
-Output columns:
+Output columns (1/2 = λ1/λ2 domain; Qout by outgoing amplitudes, r*-origin independent;
+Qin by ingoing amplitudes, r*-dependent, r* = r+2log(r/2-1), M=1):
   source   → # r  Re(S)  Im(S)  Re(phi1)  Im(phi1)  Re(psi1)  Im(psi1)
-  qfactor  → # Re(Q1)  Im(Q1)  |Q1|  Re(Q2)  Im(Q2)  |Q2|  Re(ΔQ)  Im(ΔQ)  |ΔQ|
-  qscan    → # omega  |Q1|  |Q2|  err    (err = ||Q1|-|Q2||)
-  qscan2d  → # omega1  omega2  |Q1|  |Q2|  err    (err = ||Q1|-|Q2||)
+  qfactor  → # ReQout1 ImQout1 ReQout2 ImQout2 ReQin1 ImQin1 ReQin2 ImQin2
+  qscan    → # w  ReQout1 ImQout1 ReQout2 ImQout2 ReQin1 ImQin1 ReQin2 ImQin2
+  qscan2d  → # w1 w2 ReQout1 ImQout1 ReQout2 ImQout2 ReQin1 ImQin1 ReQin2 ImQin2
 """
 
-include("QFactor.jl")  # pulls in Source.jl, SourceOO*.jl, HomogeneousSolutions.jl
+include("QFactor.jl")
 using ProgressMeter
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-"""
-    lambda_domain(λ, ω) → (rmin, rmax)
-
-Convert a domain-scale parameter λ and frequency ω to integration bounds.
-"""
 function lambda_domain(λ::Float64, ω::Float64)
     rmin = λ + 1.0
     rmax = 10^(λ - 1) / (2 * ω)
     return rmin, rmax
 end
 
-"""
-    source_fn(parity, src) → function
-
-Return the source function for the given parity and source variant.
-"""
-function source_fn(parity::String, src::String)
-    if parity == "ooo"
-        return src == "adrien" ? S_OOO_adrien : S_OOO
-    elseif parity == "ooe"
-        return S_OOE
-    else
-        error("Source for $parity not yet implemented")
-    end
-end
-
-# ---------------------------------------------------------------------------
-# Argument parsing
-# ---------------------------------------------------------------------------
-
 mode   = ARGS[1]
-parity = ARGS[2]
-
-# ---------------------------------------------------------------------------
-# source mode
-# ---------------------------------------------------------------------------
+sector = ARGS[2]
+sector in SECTORS || error("Unknown sector: $sector. Use one of $(SECTORS).")
 
 if mode == "source"
     l1   = parse(Int,     ARGS[3])
@@ -83,50 +42,45 @@ if mode == "source"
     rmin = parse(Float64, ARGS[9])
     rmax = parse(Float64, ARGS[10])
     npts = parse(Int,     ARGS[11])
-    src  = length(ARGS) >= 12 ? ARGS[12] : "bruno"
 
-    S_fn = source_fn(parity, src)
-    sol1 = linear_sol(l1, ω, "odd", 5, Int(rmax), "default", 1e-7, 1e-7)
-    sol2 = (l1 == l2) ? sol1 : linear_sol(l2, ω, "odd", 5, Int(rmax), "default", 1e-7, 1e-7)
+    sol1 = linear_sol(l1, ω, _parity(sector[1]), 5, Int(rmax), "default", 1e-10, 1e-10)
+    sol2 = (l1 == l2 && sector[1] == sector[2]) ? sol1 :
+           linear_sol(l2, ω, _parity(sector[2]), 5, Int(rmax), "default", 1e-10, 1e-10)
+    S_fn = make_source(sector, sol1, sol2, l1, l2, l, m1, m2, ω, ω)
 
     println("# r  Re(S)  Im(S)  Re(phi1)  Im(phi1)  Re(psi1)  Im(psi1)")
     for r in range(rmin, rmax, length=npts)
-        S    = S_fn(sol1, sol2, ω, ω, l1, l2, l, m1, m2, r)
+        S    = S_fn(r)
         u, v = sol1(r)
         println(r, " ", real(S), " ", imag(S), " ",
                 real(u), " ", imag(u), " ", real(v), " ", imag(v))
     end
 
-# ---------------------------------------------------------------------------
-# qfactor mode
-# ---------------------------------------------------------------------------
-
 elseif mode == "qfactor"
-    l1  = parse(Int,     ARGS[3])
-    l2  = parse(Int,     ARGS[4])
-    l   = parse(Int,     ARGS[5])
-    m1  = parse(Int,     ARGS[6])
-    m2  = parse(Int,     ARGS[7])
-    ω   = parse(Float64, ARGS[8])
-    λ1  = length(ARGS) >= 9  ? parse(Float64, ARGS[9])  : 4.0
-    λ2  = length(ARGS) >= 10 ? parse(Float64, ARGS[10]) : 5.0
-    src = length(ARGS) >= 11 ? ARGS[11] : "bruno"
+    l1   = parse(Int,     ARGS[3])
+    l2   = parse(Int,     ARGS[4])
+    l    = parse(Int,     ARGS[5])
+    m1   = parse(Int,     ARGS[6])
+    m2   = parse(Int,     ARGS[7])
+    ω    = parse(Float64, ARGS[8])
+    λ1   = length(ARGS) >= 9  ? parse(Float64, ARGS[9])  : 4.0
+    λ2   = length(ARGS) >= 10 ? parse(Float64, ARGS[10]) : 5.0
+    c1m1 = length(ARGS) >= 11 ? parse(Float64, ARGS[11]) : 0.0
 
     rmin1, rmax1 = lambda_domain(λ1, ω)
     rmin2, rmax2 = lambda_domain(λ2, ω)
 
-    Q1 = qfactor(parity, (l1, m1, ω), (l2, m2, ω), l; rmin=rmin1, rmax=rmax1, source=src)
-    Q2 = qfactor(parity, (l1, m1, ω), (l2, m2, ω), l; rmin=rmin2, rmax=rmax2, source=src)
-    ΔQ = Q2 - Q1
+    R1 = qfactor_full(sector, (l1, m1, ω), (l2, m2, ω), l; rmin=rmin1, rmax=rmax1, cfree=(c1m1=c1m1,))
+    R2 = qfactor_full(sector, (l1, m1, ω), (l2, m2, ω), l; rmin=rmin2, rmax=rmax2, cfree=(c1m1=c1m1,))
 
-    println("# Re(Q1)  Im(Q1)  |Q1|  Re(Q2)  Im(Q2)  |Q2|  Re(ΔQ)  Im(ΔQ)  |ΔQ|")
-    println(real(Q1), " ", imag(Q1), " ", abs(Q1), " ",
-            real(Q2), " ", imag(Q2), " ", abs(Q2), " ",
-            real(ΔQ), " ", imag(ΔQ), " ", abs(ΔQ))
+    println("# ReQout1 ImQout1 ReQout2 ImQout2 ReQin1 ImQin1 ReQin2 ImQin2")
+    println(real(R1.Qout), " ", imag(R1.Qout), " ", real(R2.Qout), " ", imag(R2.Qout), " ",
+            real(R1.Qin), " ", imag(R1.Qin), " ", real(R2.Qin), " ", imag(R2.Qin))
 
-# ---------------------------------------------------------------------------
-# qscan mode
-# ---------------------------------------------------------------------------
+    for (name, Q1, Q2) in (("Qout", R1.Qout, R2.Qout), ("Qin", R1.Qin, R2.Qin))
+        println("$name: |1|=$(abs(Q1)) arg1/pi=$(angle(Q1)/pi)  |2|=$(abs(Q2)) arg2/pi=$(angle(Q2)/pi)  " *
+                "Δ|.|=$(abs(Q2)-abs(Q1)) Δarg/pi=$(angle(Q2)/pi-angle(Q1)/pi)")
+    end
 
 elseif mode == "qscan"
     l1    = parse(Int,     ARGS[3])
@@ -139,22 +93,17 @@ elseif mode == "qscan"
     npts  = parse(Int,     ARGS[10])
     λ1    = length(ARGS) >= 11 ? parse(Float64, ARGS[11]) : 4.0
     λ2    = length(ARGS) >= 12 ? parse(Float64, ARGS[12]) : 5.0
-    src   = length(ARGS) >= 13 ? ARGS[13] : "bruno"
 
-    println("# omega  |Q1|  |Q2|  err")
+    println("# w  ReQout1 ImQout1 ReQout2 ImQout2 ReQin1 ImQin1 ReQin2 ImQin2")
     for ω in range(ω_min, ω_max, length=npts)
-        local rmin1, rmax1, rmin2, rmax2, Q1, Q2, err
+        local rmin1, rmax1, rmin2, rmax2, R1, R2
         rmin1, rmax1 = lambda_domain(λ1, ω)
         rmin2, rmax2 = lambda_domain(λ2, ω)
-        Q1 = qfactor(parity, (l1, m1, ω), (l2, m2, ω), l; rmin=rmin1, rmax=rmax1, source=src)
-        Q2 = qfactor(parity, (l1, m1, ω), (l2, m2, ω), l; rmin=rmin2, rmax=rmax2, source=src)
-        err = abs(abs(Q1) - abs(Q2))
-        println(ω, " ", abs(Q1), " ", abs(Q2), " ", err)
+        R1 = qfactor_full(sector, (l1, m1, ω), (l2, m2, ω), l; rmin=rmin1, rmax=rmax1)
+        R2 = qfactor_full(sector, (l1, m1, ω), (l2, m2, ω), l; rmin=rmin2, rmax=rmax2)
+        println(ω, " ", real(R1.Qout), " ", imag(R1.Qout), " ", real(R2.Qout), " ", imag(R2.Qout), " ",
+                real(R1.Qin), " ", imag(R1.Qin), " ", real(R2.Qin), " ", imag(R2.Qin))
     end
-
-# ---------------------------------------------------------------------------
-# qscan2d mode  — independent ω1, ω2 grid
-# ---------------------------------------------------------------------------
 
 elseif mode == "qscan2d"
     l1     = parse(Int,     ARGS[3])
@@ -170,31 +119,30 @@ elseif mode == "qscan2d"
     n2     = parse(Int,     ARGS[13])
     λ1     = length(ARGS) >= 14 ? parse(Float64, ARGS[14]) : 4.0
     λ2     = length(ARGS) >= 15 ? parse(Float64, ARGS[15]) : 5.0
-    src    = length(ARGS) >= 16 ? ARGS[16] : "bruno"
 
-    println("# omega1  omega2  |Q1|  |Q2|  err")
+    p1 = _parity(sector[1])
+
+    println("# w1 w2 ReQout1 ImQout1 ReQout2 ImQout2 ReQin1 ImQin1 ReQin2 ImQin2")
     prog = Progress(n1 * n2; desc="qscan2d: ", output=stderr, showspeed=true)
     for ω1 in range(ω1_min, ω1_max, length=n1)
-        # ── Compute and cache sol1 at both lambda domains ──────────────────
         rmin1_λ1, rmax1_λ1 = lambda_domain(λ1, ω1)
-        sol1_λ1  = linear_sol(l1, ω1, "odd", rmin1_λ1, rmax1_λ1, "default", 1e-7, 1e-7)
-        _, aout1_λ1 = extract_amps(sol1_λ1, ω1, rmax1_λ1)
+        sol1_λ1  = linear_sol(l1, ω1, p1, rmin1_λ1, rmax1_λ1, "default", 1e-10, 1e-10)
+        amps1_λ1 = extract_amps(sol1_λ1, ω1, rmax1_λ1, p1)
 
         rmin1_λ2, rmax1_λ2 = lambda_domain(λ2, ω1)
-        sol1_λ2  = linear_sol(l1, ω1, "odd", rmin1_λ2, rmax1_λ2, "default", 1e-7, 1e-7)
-        _, aout1_λ2 = extract_amps(sol1_λ2, ω1, rmax1_λ2)
+        sol1_λ2  = linear_sol(l1, ω1, p1, rmin1_λ2, rmax1_λ2, "default", 1e-10, 1e-10)
+        amps1_λ2 = extract_amps(sol1_λ2, ω1, rmax1_λ2, p1)
 
-        # ── Inner loop over ω2 ────────────────────────────────────────────
         for ω2 in range(ω2_min, ω2_max, length=n2)
-            local Q1, Q2, err
-            Q1 = qfactor_row(parity, sol1_λ1, aout1_λ1,
+            local R1, R2
+            R1 = qfactor_row_full(sector, sol1_λ1, amps1_λ1,
                              (l1, m1, ω1), (l2, m2, ω2), l;
-                             rmin=rmin1_λ1, rmax=rmax1_λ1, source=src)
-            Q2 = qfactor_row(parity, sol1_λ2, aout1_λ2,
+                             rmin=rmin1_λ1, rmax=rmax1_λ1)
+            R2 = qfactor_row_full(sector, sol1_λ2, amps1_λ2,
                              (l1, m1, ω1), (l2, m2, ω2), l;
-                             rmin=rmin1_λ2, rmax=rmax1_λ2, source=src)
-            err = abs(abs(Q1) - abs(Q2))
-            println(ω1, " ", ω2, " ", abs(Q1), " ", abs(Q2), " ", err)
+                             rmin=rmin1_λ2, rmax=rmax1_λ2)
+            println(ω1, " ", ω2, " ", real(R1.Qout), " ", imag(R1.Qout), " ", real(R2.Qout), " ", imag(R2.Qout), " ",
+                    real(R1.Qin), " ", imag(R1.Qin), " ", real(R2.Qin), " ", imag(R2.Qin))
             next!(prog)
         end
     end

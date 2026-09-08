@@ -1,19 +1,31 @@
-# .gitignore
-
 .DS_Store
 .vscode/
 *.code-workspace
 .ipynb_checkpoints/
 **/.ipynb_checkpoints/
+*.ipynb
 .jupyter/
 .private/
+.claude/settings.local.json
+_attic/
 
+# data
 data/*
+data_PM/*
 
-# LaTeX build artifacts
+# plots (keep scripts, drop renders)
+plots/*.pdf
+plots/*.png
+
+# scratch
+_compute_*.jl
+
+# slurm
+slurm/logs/
+
+# latex
 *.aux
 *.fdb_latexmk
 *.fls
 *.log
 *.synctex.gz
-
