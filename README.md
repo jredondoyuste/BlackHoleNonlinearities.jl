@@ -3,6 +3,9 @@
 Calculation of the excitation of higher harmonics when scattering gravitational waves off a Schwarzschild Black Hole. 
 Code on constant development. 
 
+> **`cluster` branch** — compute-only subset for HPC. `mma/`, `tools/`, `plots/`
+> and the convergence studies are on `main`. See `CLAUDE.md`.
+
 ### Layout
 
 | | |
