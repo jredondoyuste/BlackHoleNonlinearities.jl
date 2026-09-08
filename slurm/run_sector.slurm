@@ -19,8 +19,14 @@ set -euo pipefail
 mkdir -p slurm/logs
 
 module purge
-module load julia/REPLACE_ME            # e.g. julia/1.11.3
+module load julia/1.12.1
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# We parallelise with Julia threads over mode combos; nested OpenMP/BLAS threads
+# would only oversubscribe. Also silences libgomp's warning about an inherited
+# non-numeric OMP_NUM_THREADS.
+export OMP_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
 
 MODES_FILE="$PROJECT_DIR/slurm/modes.txt"
 OUTDIR="/scratch/gpfs/REPLACE_ME/qscan_${SLURM_ARRAY_JOB_ID}"   # <ResearchGroup>/<netid>; not backed up
