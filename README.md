@@ -3,11 +3,24 @@
 Calculation of the excitation of higher harmonics when scattering gravitational waves off a Schwarzschild Black Hole. 
 Code on constant development. 
 
-### Usage 
+### Layout
 
-Mathematica code used to regularize the source is contained within `mma/`. 
-Julia code is contained within `src/`. 
-Check the `examples/` folder for usage examples.
+| | |
+|---|---|
+| `mma/` | regularized source coefficients (Mathematica), input to the translator |
+| `tools/` | `mma2julia.jl` translator and its Mathematica oracle |
+| `jl/` | solver: `QFactor.jl`, `HomogeneousSolutions.jl`, `Source.jl` |
+| `jl/generated/` | translated sources, one per sector — do not hand-edit |
+| `jl/runs.jl` | CLI: `source` / `qfactor` / `qscan` / `qscan2d` |
+| `jl/scan_modes.jl`, `slurm/` | batch driver and job array, one task per sector |
+| `test/`, `plots/` | test suite and analysis scripts |
+
+Sectors are named `XYZ` for the parities of mode 1, mode 2 and the output
+(`e` = even/Zerilli, `o` = odd/Regge-Wheeler): eee, eeo, eoe, eoo, ooe, ooo.
+
+    julia --project=. jl/runs.jl qfactor ooo 2 2 3 2 -2 0.3   # l1 l2 l m1 m2 omega
+    julia --project=. test/test_qfactor.jl
+
 [Code in development]
 
 ### Authors
