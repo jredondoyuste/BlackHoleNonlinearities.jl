@@ -1,43 +1,11 @@
-"""
-Q-factor computation for black hole nonlinear perturbations.
-Main entry: `qfactor(sector, mode1, mode2, l; kwargs...)` / `qfactor_full(...)` → NamedTuple.
-
-sector = XYZ: X,Y = parity of mode1/mode2, Z = parity of output ("e"=Zerilli/even, "o"=RW/odd).
-mode1/mode2 = (l,m,ω)::Tuple{Int,Int,Float64}. `qfactor` returns Qout = A2/(aout1*aout2) (old
-normalization). `qfactor_full` also returns Qin = A2/(ain1*ain2) (depends on the r* origin,
-r* = r+2log(r/2-1), M=1), and A2, ain1, aout1, ain2, aout2, ain_hom, aout_hom. Returns Q_h
-(h-amplitude, via atoh_factor).
-
-Keyword arguments:
-    rmin=5, rmax=10^5 — ODE near-horizon seed r0 = 2+10^(-rmin); keep rmin large for a good series IC.
-    solver_lin="default", solver_scd="verne"
-    oo=8, atol=1e-10, rtol=1e-10 — ODE solver tolerances (unrelated to quadrature).
-    quad_rmin=nothing → QUAD_RMIN_DEFAULT[sector] (eoe 5, else 3) — quadrature inner cutoff
-        r=2+10^(-quad_rmin); eoe needs 5 (cfree shifts Q 15% at 3, 0.2% at 5), eeo/eee must stay
-        at 3 (near-horizon cancellation is noise below that).
-    quad_rtol=1e-10 — per-panel relative tolerance for quadgk (each panel ≈ one oscillation
-        period; a single Gauss-Kronrod rule at order 8 typically suffices).
-    quad_maxevals=20_000_000 — hard cap on total integrand evaluations; raises
-        QuadratureNotConverged past this.  Per-panel cap is QUAD_PANEL_MAXEVALS (150).
-    cfree=(;) — free regularization constants, forwarded to make_source.
-
-The cumulative integral is Richardson-extrapolated (model I(R) = I_∞ + C/R) using
-window-averaged values at rmax/2 and rmax.  This removes the 1/R algebraic tail from the
-integrand's non-oscillating component and is essential when Q is small.
-"""
-
 import QuadGK
 include("HomogeneousSolutions.jl")
 include("Source.jl")
 
-# ψ-amplitude → h-amplitude: h² = ψ²/√(l(l+1)), atoh(l) = √(l(l+1)(l+2)(l-1))/2, Q_h = atoh_factor·Q_ψ.
 atoh(l::Int) = sqrt(l * (l+1) * (l+2) * (l-1)) / 2.0
 atoh_factor(l1::Int, l2::Int, l::Int) = atoh(l) / (atoh(l1) * atoh(l2))
 
 const QUAD_RMIN_DEFAULT = Dict("eee"=>3, "eeo"=>3, "eoe"=>5, "eoo"=>3, "ooe"=>3, "ooo"=>3)
-
-# One G-K rule at order 8 uses 17 evals; 150 allows ~8 subdivisions per panel, enough for
-# panels that are smooth by construction (one oscillation period wide).
 const QUAD_PANEL_MAXEVALS = 150
 const QUAD_MAX_PANELS = 500_000
 
@@ -49,9 +17,6 @@ end
 Base.showerror(io::IO, e::QuadratureNotConverged) =
     print(io, "QuadratureNotConverged: did not converge within $(e.n) integrand evaluations")
 
-# Wavelength panels: the integrand oscillates at up to 2ω_out in r* (from sol_hom × source
-# beat), so we subdivide [r0, rmax] into panels of width π·f(r)/ω_out in the r coordinate
-# (one period of the 2ω_out beat, half a period of the ω_out fundamental).
 function _wavelength_panels(r0::Float64, rmax::Float64, ω_out::Float64)
     λ_star = ω_out > 0 ? π / ω_out : Inf
     npanel_est = isfinite(λ_star) ? ceil(Int, (rmax - r0) / (λ_star * (1 - 2/rmax))) : 1
@@ -67,8 +32,6 @@ function _wavelength_panels(r0::Float64, rmax::Float64, ω_out::Float64)
     return edges
 end
 
-# Window-average the cumulative integral over one wavelength ending at panel k_hi.
-# Returns (average_value, midpoint_radius).
 function _window_average(edges::Vector{Float64}, cum::Vector{ComplexF64},
                          k_hi::Int, W::Float64)
     B = edges[k_hi]
@@ -138,10 +101,7 @@ function _qfactor(sector::String,
     end
     total = cum[end]
 
-    # Richardson extrapolation: the integrand's non-oscillating tail decays as 1/r²,
-    # so the cumulative integral has a 1/R correction: I(R) = I_∞ + C/R.
-    # Window-average the cumulative integral over one wavelength to remove oscillations,
-    # then extrapolate from two points to cancel the 1/R term.
+    # Remove the leading 1/R tail using wavelength averages at rmax/2 and rmax.
     if ω_out > 0
         W = π / ω_out
         k_hi = npanel + 1
@@ -155,7 +115,8 @@ function _qfactor(sector::String,
         end
     end
 
-    A2 = atoh_factor(l1, l2, l) * im / (2 * ω_out * ain_hom) * total
+    # W = 2iω' a_in for the convention used by the Mathematica source.
+    A2 = atoh_factor(l1, l2, l) * (-im) / (2 * ω_out * ain_hom) * total
     Qout = A2 / (aout1 * aout2)
     Qin  = A2 / (ain1 * ain2)
     return (Qout=Qout, Qin=Qin, A2=A2, ain1=ain1, aout1=aout1,
@@ -192,34 +153,4 @@ function qfactor(sector::String,
                  l::Int;
                  kwargs...)
     return qfactor_full(sector, mode1, mode2, l; kwargs...).Qout
-end
-
-function qfactor_row_full(sector::String,
-                     sol1, amps1,
-                     mode1::Tuple{Int,Int,Float64},
-                     mode2::Tuple{Int,Int,Float64},
-                     l::Int;
-                     rmin=5, rmax=10^5,
-                     solver_lin="default", solver_scd="verne",
-                     oo=8, atol=1e-10, rtol=1e-10,
-                     quad_rmin=nothing, quad_rtol=1e-10,
-                     quad_maxevals=20_000_000,
-                     cfree::NamedTuple=(;))
-    sector in SECTORS || error("sector \"$sector\" not implemented (valid: $(SECTORS))")
-
-    return _qfactor(sector, sol1, amps1, mode1, mode2, l;
-                    rmin=rmin, rmax=rmax, solver_scd=solver_scd,
-                    oo=oo, atol=atol, rtol=rtol,
-                    quad_rmin=quad_rmin, quad_rtol=quad_rtol,
-                    quad_maxevals=quad_maxevals,
-                    cfree=cfree)
-end
-
-function qfactor_row(sector::String,
-                     sol1, amps1,
-                     mode1::Tuple{Int,Int,Float64},
-                     mode2::Tuple{Int,Int,Float64},
-                     l::Int;
-                     kwargs...)
-    return qfactor_row_full(sector, sol1, amps1, mode1, mode2, l; kwargs...).Qout
 end

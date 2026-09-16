@@ -1,3 +1,0 @@
-# l1 m1 l2 m2 l m  (mode1, mode2, output) — same list used for every sector
-2 2 2 -2 2 0
-2 2 2  2 4 4

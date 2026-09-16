@@ -1,29 +1,9 @@
 .DS_Store
 .vscode/
+.claude/
 *.code-workspace
 .ipynb_checkpoints/
-**/.ipynb_checkpoints/
-*.ipynb
-.jupyter/
-.private/
-.claude/settings.local.json
-_attic/
-
-# data
-data/*
-data_PM/*
-
-# plots (keep scripts, drop renders)
-plots/*.pdf
-plots/*.png
-
-# scratch
-_compute_*.jl
-
-# slurm
-slurm/logs/
-
-# latex
+examples/output/
 *.aux
 *.fdb_latexmk
 *.fls

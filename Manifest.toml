@@ -2,7 +2,7 @@
 
 julia_version = "1.12.4"
 manifest_format = "2.0"
-project_hash = "6102340cc0faed6bfc76e1ecb3394c05d0cee077"
+project_hash = "6fcfb51c51703db4f88e9df75bd154a718fcda12"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "f7304359109c768cf32dc5fa2d371565bb63b68a"
@@ -247,12 +247,6 @@ git-tree-sha1 = "05ba0d07cd4fd8b7a39541e31a7b0254704ea581"
 uuid = "fb6a15b2-703c-40df-9091-08a04967cfa9"
 version = "0.1.13"
 
-[[deps.CodeTracking]]
-deps = ["InteractiveUtils", "UUIDs"]
-git-tree-sha1 = "b7231a755812695b8046e8471ddc34c8268cbad5"
-uuid = "da1fd8a2-8d9e-5ec2-8556-3022fb5608a2"
-version = "3.0.0"
-
 [[deps.CodecZlib]]
 deps = ["TranscodingStreams", "Zlib_jll"]
 git-tree-sha1 = "962834c22b66e32aa10f7611c08c8ca4e20749a9"
@@ -291,11 +285,6 @@ git-tree-sha1 = "37ea44092930b1811e666c3bc38065d7d87fcc74"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.13.1"
 
-[[deps.Combinatorics]]
-git-tree-sha1 = "c761b00e7755700f9cdf5b02039939d1359330e1"
-uuid = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
-version = "1.1.0"
-
 [[deps.CommonSolve]]
 git-tree-sha1 = "78ea4ddbcf9c241827e7035c3a03e2e456711470"
 uuid = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
@@ -321,11 +310,6 @@ weakdeps = ["Dates", "LinearAlgebra"]
 
     [deps.Compat.extensions]
     CompatLinearAlgebraExt = "LinearAlgebra"
-
-[[deps.Compiler]]
-git-tree-sha1 = "382d79bfe72a406294faca39ef0c3cef6e6ce1f1"
-uuid = "807dbc54-b67e-4c79-8afb-eafe4df6f2e1"
-version = "0.1.1"
 
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -870,12 +854,6 @@ git-tree-sha1 = "53bb909d1151e57e2484c3d1b53e19552b887fb2"
 uuid = "42e2da0e-8278-4e71-bc24-59509adca0fe"
 version = "1.0.2"
 
-[[deps.HCubature]]
-deps = ["Combinatorics", "DataStructures", "LinearAlgebra", "QuadGK", "StaticArrays"]
-git-tree-sha1 = "8ee627fb73ecba0b5254158b04d4745611b404a1"
-uuid = "19dc6840-f33b-545b-b366-655c7e3ffd49"
-version = "1.8.0"
-
 [[deps.HTTP]]
 deps = ["Base64", "CodecZlib", "ConcurrentUtilities", "Dates", "ExceptionUnwrapping", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "OpenSSL", "PrecompileTools", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
 git-tree-sha1 = "5e6fe50ae7f23d171f44e311c2960294aaa0beb5"
@@ -927,36 +905,6 @@ version = "0.1.5"
 git-tree-sha1 = "4c1acff2dc6b6967e7e750633c50bc3b8d83e617"
 uuid = "18e54dd8-cb9d-406c-a71d-865a43cbb235"
 version = "0.1.3"
-
-[[deps.Integrals]]
-deps = ["ArrayInterface", "CommonSolve", "HCubature", "LinearAlgebra", "MonteCarloIntegration", "QuadGK", "Random", "Reexport", "SciMLBase"]
-git-tree-sha1 = "bf60e3062efc743bc1645a4f1c1ed1c423b59097"
-uuid = "de52edbc-65ea-441a-8357-d3a637375a31"
-version = "4.9.0"
-
-    [deps.Integrals.extensions]
-    IntegralsArblibExt = "Arblib"
-    IntegralsCubaExt = "Cuba"
-    IntegralsCubatureExt = "Cubature"
-    IntegralsDifferentiationInterfaceExt = ["ADTypes", "DifferentiationInterface", "ChainRulesCore"]
-    IntegralsFastGaussQuadratureExt = "FastGaussQuadrature"
-    IntegralsForwardDiffExt = "ForwardDiff"
-    IntegralsMCIntegrationExt = "MCIntegration"
-    IntegralsMooncakeExt = ["Mooncake", "Zygote", "ChainRulesCore"]
-    IntegralsZygoteExt = ["Zygote", "ChainRulesCore", "Mooncake"]
-
-    [deps.Integrals.weakdeps]
-    ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
-    Arblib = "fb37089c-8514-4489-9461-98f9c8763369"
-    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-    Cuba = "8a292aeb-7a57-582c-b821-06e4c11590b1"
-    Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
-    DifferentiationInterface = "a0c0ee7d-e4b9-4e03-894e-1c5f64a51d63"
-    FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
-    ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
-    MCIntegration = "ea1e2de9-7db7-4b42-91ee-0cd1bf6df167"
-    Mooncake = "da2b9cff-9c12-43a0-ae48-6db2b0edb7d6"
-    Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [[deps.IntelOpenMP_jll]]
 deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl"]
@@ -1024,12 +972,6 @@ deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "b6893345fd6658c8e475d40155789f4860ac3b21"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
 version = "3.1.4+0"
-
-[[deps.JuliaInterpreter]]
-deps = ["CodeTracking", "InteractiveUtils", "Random", "UUIDs"]
-git-tree-sha1 = "80580012d4ed5a3e8b18c7cd86cebe4b816d17a6"
-uuid = "aa1ae85d-cabe-5617-a682-6adf51b2e16a"
-version = "0.10.9"
 
 [[deps.JuliaSyntaxHighlighting]]
 deps = ["StyledStrings"]
@@ -1111,12 +1053,6 @@ version = "0.16.10"
     SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
     SymEngine = "123dc426-2d89-5057-bbad-38513e3affd8"
     tectonic_jll = "d7dd28d6-a5e6-559c-9131-7eb760cdacc5"
-
-[[deps.LatticeRules]]
-deps = ["Random"]
-git-tree-sha1 = "7f5b02258a3ca0221a6a9710b0a0a2e8fb4957fe"
-uuid = "73f95e8e-ec14-4e6a-8b18-0d2e271c4e55"
-version = "0.0.1"
 
 [[deps.LayoutPointers]]
 deps = ["ArrayInterface", "LinearAlgebra", "ManualMemory", "SIMDTypes", "Static", "StaticArrayInterface"]
@@ -1316,12 +1252,6 @@ git-tree-sha1 = "f00544d95982ea270145636c181ceda21c4e2575"
 uuid = "e6f89c97-d47a-5376-807f-9c37f3926c36"
 version = "1.2.0"
 
-[[deps.LoweredCodeUtils]]
-deps = ["CodeTracking", "Compiler", "JuliaInterpreter"]
-git-tree-sha1 = "65ae3db6ab0e5b1b5f217043c558d9d1d33cc88d"
-uuid = "6f1432cf-f94c-5a45-995e-cdbf5db27b0b"
-version = "3.5.0"
-
 [[deps.MKL_jll]]
 deps = ["Artifacts", "IntelOpenMP_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "oneTBB_jll"]
 git-tree-sha1 = "282cadc186e7b2ae0eeadbd7a4dffed4196ae2aa"
@@ -1389,12 +1319,6 @@ version = "1.2.0"
 [[deps.Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 version = "1.11.0"
-
-[[deps.MonteCarloIntegration]]
-deps = ["Distributions", "QuasiMonteCarlo", "Random"]
-git-tree-sha1 = "722ad522068d31954b4a976b66a26aeccbf509ed"
-uuid = "4886b29c-78c9-11e9-0a6e-41e1f4161f7b"
-version = "0.2.0"
 
 [[deps.Moshi]]
 deps = ["ExproniconLite", "Jieko"]
@@ -1886,12 +1810,6 @@ deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 version = "1.11.0"
 
-[[deps.ProgressMeter]]
-deps = ["Distributed", "Printf"]
-git-tree-sha1 = "fbb92c6c56b34e1a2c4c36058f68f332bec840e7"
-uuid = "92933f4c-e287-5a05-a399-4b506db050ca"
-version = "1.11.0"
-
 [[deps.PtrArrays]]
 git-tree-sha1 = "1d36ef11a9aaf1e8b74dacc6a731dd1de8fd493d"
 uuid = "43287f4e-b6f4-7ad1-bb20-aadabca52c3d"
@@ -1932,16 +1850,6 @@ version = "2.11.2"
 
     [deps.QuadGK.weakdeps]
     Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
-
-[[deps.QuasiMonteCarlo]]
-deps = ["Accessors", "ConcreteStructs", "LatticeRules", "LinearAlgebra", "PrecompileTools", "Primes", "Random", "Sobol"]
-git-tree-sha1 = "017a6731a1754173013b98f458adb631e368a9d2"
-uuid = "8a4e6c94-4038-4cdc-81c3-7e6ffdb2a71b"
-version = "0.3.5"
-weakdeps = ["Distributions"]
-
-    [deps.QuasiMonteCarlo.extensions]
-    QuasiMonteCarloDistributionsExt = "Distributions"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "JuliaSyntaxHighlighting", "Markdown", "Sockets", "StyledStrings", "Unicode"]
@@ -2038,16 +1946,6 @@ deps = ["StaticArrays"]
 git-tree-sha1 = "31c086583c92ab32d82ebef0d09fbcd6dd2c54a7"
 uuid = "ae5879a3-cd67-5da8-be7f-38c6eb64a37b"
 version = "1.2.0"
-
-[[deps.Revise]]
-deps = ["CodeTracking", "FileWatching", "InteractiveUtils", "JuliaInterpreter", "LibGit2", "LoweredCodeUtils", "OrderedCollections", "Preferences", "REPL", "UUIDs"]
-git-tree-sha1 = "dfd6fab9aa325b382773b8930998ce84c2918e5e"
-uuid = "295af30f-e4ad-537b-8983-00126c2a3abe"
-version = "3.13.1"
-weakdeps = ["Distributed"]
-
-    [deps.Revise.extensions]
-    DistributedExt = "Distributed"
 
 [[deps.Rmath]]
 deps = ["Random", "Rmath_jll"]
@@ -2191,12 +2089,6 @@ version = "0.9.5"
 git-tree-sha1 = "58e6353e72cde29b90a69527e56df1b5c3d8c437"
 uuid = "ce78b400-467f-4804-87d8-8f486da07d0a"
 version = "1.1.0"
-
-[[deps.Sobol]]
-deps = ["DelimitedFiles", "Random"]
-git-tree-sha1 = "5a74ac22a9daef23705f010f72c81d6925b19df8"
-uuid = "ed01d8cd-4d21-5b2a-85b4-cc3bdc58bad4"
-version = "1.5.0"
 
 [[deps.Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"

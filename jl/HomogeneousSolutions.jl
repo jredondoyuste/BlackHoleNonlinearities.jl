@@ -1,9 +1,4 @@
-"""
-Homogeneous Regge-Wheeler / Zerilli solvers. Main entry: `linear_sol`.
-"""
-
 import DifferentialEquations as DE
-using ADTypes
 
 function VRW(r,l)
     return @. (-(6 / r^3) + (l * (1 + l)) / r^2) * (1 - 2 / r)
@@ -15,21 +10,18 @@ function VZ(r,l)
     return numerator ./ denominator
 end
 
-# u = [ϕ, ψ], p = [ω, l]
 function reggewheeler(du, u, p, t)
     ϕ, ψ = u
     du[1] = ψ
     du[2] = - 2*ψ/(t*(t-2)) + (VRW(t,p[2])-p[1]^2)*ϕ/((1-2/t)^2)
 end
 
-# u = [ϕ, ψ], p = [ω, l]
 function zerilli(du, u, p, t)
     ϕ, ψ = u
     du[1] = ψ
     du[2] = - 2*ψ/(t*(t-2)) + (VZ(t,p[2])-p[1]^2)*ϕ/((1-2/t)^2)
 end
 
-# Near-horizon (r≈2) boundary condition for RW; power series in (r-2). Returns [ϕ, ψ].
 function bc_rw(l::Int, w::Float64, r::Float64)
     a1 = (1im*(-3 + l + l^2))/(2*1im + 8*w)
     a2 = -1/16*(12 + l*(1 + l)*(-6 + l + l^2 + (8*1im)*w) - (36*1im)*w)/(-1 + (6*1im)*w + 8*w^2)
@@ -47,7 +39,6 @@ function bc_rw(l::Int, w::Float64, r::Float64)
     return [ϕ*exp(-im*w*r),(ψ-im*w*r*ϕ/(r-2))*exp(-im*w*r)]
 end
 
-# Near-horizon (r≈2) boundary condition for Zerilli; power series in (r-2). Returns [ϕ, ψ].
 function bc_z(l::Int, w::Float64, r::Float64)
     a1=((1im/2)*(3 - 2*l - l^2 + 2*l^3 + l^4))/((1 + l + l^2)*(1im + 4*w))
     a2=(-24 - 4*l^7 - l^8 + 8*l^5*(1 - (3*1im)*w) + l^4*(-2 - (4*1im)*w) + l^6*(-2 - (8*1im)*w) + 10*l*(3 - (8*1im)*w) + l^3*(-22 + (32*1im)*w) + l^2*(17 - (60*1im)*w) + (36*1im)*w)/(16*(1 + l + l^2)^2*(-1 + (6*1im)*w + 8*w^2))
@@ -65,38 +56,29 @@ function bc_z(l::Int, w::Float64, r::Float64)
     return [ϕ*exp(-im*w*r),(ψ-im*w*r*ϕ/(r-2))*exp(-im*w*r)]
 end
 
-# Solve from near-horizon to rmax. parity: "even" (Zerilli) or "odd" (Regge-Wheeler).
 function linear_sol(l::Int, ω::Float64, parity::String, rmin, rmax, solver="default", atol=1e-12, rtol=1e-12)
     tspan = (2+10.0^(-rmin), rmax)
     p = [ω, l]
     if parity == "even"
         u0 = bc_z(l,ω,2+10.0^(-rmin))
         prob = DE.ODEProblem(zerilli, u0, tspan, p)
-    elseif  parity == "odd"
+    elseif parity == "odd"
         u0 = bc_rw(l,ω,2+10.0^(-rmin))
         prob = DE.ODEProblem(reggewheeler, u0, tspan, p)
+    else
+        error("parity must be \"odd\" or \"even\"")
     end
     if solver=="default"
         sv = DE.Tsit5()
     elseif solver=="verne"
         sv=DE.Vern9()
+    else
+        error("solver must be \"default\" or \"verne\"")
     end
     sol = DE.solve(prob, sv, reltol=rtol, abstol=atol, maxiters=1e6)
     return sol
 end
 
-# Leading-order amplitude extraction (assumes ψ ≈ a_in e^{-iωr*} + a_out e^{iωr*} exactly,
-# ignoring O(1/r)); kept for comparison, use `extract_amps` instead. Returns [a_in, a_out].
-function extract_amps_lo(sol, ω, rext)
-    rs=rext + 2*log(rext/2 - 1)
-    f=1-2/rext
-    ϕ, ψ = sol(rext)
-    aout = 0.5*(f*ψ/(im*ω) + ϕ)*exp(-im*ω*rs)
-    ain = 0.5*(-f*ψ/(im*ω) + ϕ)*exp(+im*ω*rs)
-    return [ain, aout]
-end
-
-# v_k (k=2..nmax+1) in V/f = Σ_k v_k r^{-k}; v[k] = v_k, v[1] unused (always 0).
 function vcoeffs(l::Int, parity::String, nmax::Int)
     v = zeros(Float64, nmax+1)
     if parity == "odd"
@@ -106,7 +88,7 @@ function vcoeffs(l::Int, parity::String, nmax::Int)
         λ = l^2 + l - 2.0
         A = Dict(2 => l*(l+1), 3 => 6.0, 4 => 36.0/λ, 5 => 72.0/λ^2)
         Bmax = max(nmax - 1, 0)
-        B = [(j+1)*(-6.0/λ)^j for j in 0:Bmax]  # B[j+1] = B_j
+        B = [(j+1)*(-6.0/λ)^j for j in 0:Bmax]
         for k in 2:nmax+1
             s = 0.0
             for i in 2:5
@@ -123,7 +105,6 @@ function vcoeffs(l::Int, parity::String, nmax::Int)
     return v
 end
 
-# Recurrence a_n = [n(n-1)a_{n-1} - 2n(n-2)a_{n-2} - Σ_{k=2}^{n+1} v_k a_{n+1-k}]/(2iωn), a_0=1, a_{-1}=0.
 function series_coeffs(ω, v::Vector{Float64}, nmax::Int)
     a = zeros(ComplexF64, nmax+1)
     a[1] = 1.0
@@ -132,7 +113,7 @@ function series_coeffs(ω, v::Vector{Float64}, nmax::Int)
         a_nm2 = n >= 2 ? a[n-1] : 0.0+0im
         s = 0.0+0im
         for k in 2:(n+1)
-            idx = n+1-k  # index of a_{n+1-k}
+            idx = n+1-k
             s += v[k]*a[idx+1]
         end
         a[n+1] = (n*(n-1)*a_nm1 - 2*n*(n-2)*a_nm2 - s)/(2*im*ω*n)
@@ -140,7 +121,6 @@ function series_coeffs(ω, v::Vector{Float64}, nmax::Int)
     return a
 end
 
-# ϕ = e^{iωr*}Σa_n^out r^{-n} (outgoing) or e^{-iωr*}Σa_n^in r^{-n} (ingoing, via ω→-ω). Returns (a_out, a_in).
 function asymptotic_coeffs(l::Int, ω, parity::String; nmax::Int=30)
     v = vcoeffs(l, parity, nmax)
     a_out = series_coeffs(ω, v, nmax)
@@ -148,7 +128,6 @@ function asymptotic_coeffs(l::Int, ω, parity::String; nmax::Int=30)
     return a_out, a_in
 end
 
-# Index of the smallest |a_n r^{-n}| term before the series starts diverging (or nmax if it never turns).
 function best_n(a::Vector{ComplexF64}, r, nmax::Int)
     prev = abs(a[1])
     for n in 1:nmax
@@ -161,7 +140,6 @@ function best_n(a::Vector{ComplexF64}, r, nmax::Int)
     return nmax
 end
 
-# (u, u') with u = Σ_{n=0}^N a_n r^{-n}, u' = Σ_{n=0}^N n a_n r^{-n-1}.
 function eval_series(a::Vector{ComplexF64}, r, N::Int)
     u = 0.0+0im
     up = 0.0+0im
@@ -175,9 +153,7 @@ function eval_series(a::Vector{ComplexF64}, r, N::Int)
     return u, up
 end
 
-# Full asymptotic-series amplitude extraction (vs extract_amps_lo's leading order).
-# parity default "odd" is legacy for backward compat; callers should pass it explicitly.
-function extract_amps(sol, ω, rext, parity::String="odd"; nmax::Int=30)
+function extract_amps(sol, ω, rext, parity::String; nmax::Int=30)
     l = Int(round(sol.prob.p[2]))
     f = 1 - 2/rext
     rs = rext + 2*log(rext/2 - 1)
