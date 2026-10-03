@@ -5,6 +5,11 @@ include("Source.jl")
 atoh(l::Int) = sqrt(l * (l+1) * (l+2) * (l-1)) / 2.0
 atoh_factor(l1::Int, l2::Int, l::Int) = atoh(l) / (atoh(l1) * atoh(l2))
 
+# Phase of an odd master amplitude in the strain amplitude, Eq. (19) of the paper:
+# -i for outgoing waves and +i for incoming ones (the TT gauge vector flips sign).
+strain_phase(parity::Char, dir::Symbol) =
+    parity == 'e' ? one(ComplexF64) : (dir == :out ? -im : im) * one(ComplexF64)
+
 const QUAD_RMIN_DEFAULT = Dict("eee"=>3, "eeo"=>3, "eoe"=>5, "eoo"=>3, "ooe"=>3, "ooo"=>3)
 const QUAD_PANEL_MAXEVALS = 150
 const QUAD_MAX_PANELS = 500_000
@@ -59,6 +64,7 @@ function _qfactor(sector::String,
                   oo=8, atol=1e-10, rtol=1e-10,
                   quad_rmin=nothing, quad_rtol=1e-10,
                   quad_maxevals=20_000_000,
+                  symmetry_factor=true,
                   cfree::NamedTuple=(;))
     sector in SECTORS || error("sector \"$sector\" not implemented (valid: $(SECTORS))")
     quad_rmin = something(quad_rmin, QUAD_RMIN_DEFAULT[sector])
@@ -116,9 +122,13 @@ function _qfactor(sector::String,
     end
 
     # W = 2iω' a_in for the convention used by the Mathematica source.
-    A2 = atoh_factor(l1, l2, l) * (-im) / (2 * ω_out * ain_hom) * total
-    Qout = A2 / (aout1 * aout2)
-    Qin  = A2 / (ain1 * ain2)
+    # The source is the exchange-summed bilinear kernel; a single parent mode
+    # (equal l, m, ω) carries the usual 1/2.
+    sym = symmetry_factor && (l1, m1, ω1) == (l2, m2, ω2) ? 0.5 : 1.0
+    A2 = sym * atoh_factor(l1, l2, l) * strain_phase(sector[3], :out) *
+         (-im) / (2 * ω_out * ain_hom) * total
+    Qout = A2 / (strain_phase(sector[1], :out) * aout1 * strain_phase(sector[2], :out) * aout2)
+    Qin  = A2 / (strain_phase(sector[1], :in) * ain1 * strain_phase(sector[2], :in) * ain2)
     return (Qout=Qout, Qin=Qin, A2=A2, ain1=ain1, aout1=aout1,
             ain2=ain2, aout2=aout2, ain_hom=ain_hom, aout_hom=aout_hom)
 end
@@ -132,6 +142,7 @@ function qfactor_full(sector::String,
                  oo=8, atol=1e-10, rtol=1e-10,
                  quad_rmin=nothing, quad_rtol=1e-10,
                  quad_maxevals=20_000_000,
+                 symmetry_factor=true,
                  cfree::NamedTuple=(;))
     sector in SECTORS || error("sector \"$sector\" not implemented (valid: $(SECTORS))")
 
@@ -144,6 +155,7 @@ function qfactor_full(sector::String,
                     oo=oo, atol=atol, rtol=rtol,
                     quad_rmin=quad_rmin, quad_rtol=quad_rtol,
                     quad_maxevals=quad_maxevals,
+                    symmetry_factor=symmetry_factor,
                     cfree=cfree)
 end
 

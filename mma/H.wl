@@ -56,7 +56,7 @@ HComponentsE = {-1/4*(A1e*A2e*KK*r*(\[Chi]2*\[Omega]1*
                \[Omega]1)*\[Omega]2*(\[Omega]1 + \[Omega]2) + 
             \[Chi]1*\[Omega]1*((-I)*\[Chi]2*(\[Omega]1 - 3*\[Omega]2) + 
               (2*M + r)*\[Omega]2*(\[Omega]1 + \[Omega]2))))*
-         JS[{l1, 1}, {l2, 0}, {l, -1}]))/(8*Sqrt[l*(1 + l)]), 
+         JS[{l1, 1}, {l2, 0}, {l, -1}]))/(16*Sqrt[l*(1 + l)]), 
      (KK*r*(A1e*Sqrt[l2*(1 + l2)]*parity*(2*A2e*\[Omega]1*
            ((1 - (4*I)*M*\[Chi]2*\[Omega]1 - I*r*\[Chi]2*\[Omega]1)*
              \[Omega]2 + \[Chi]1*\[Omega]1*(\[Chi]2 + I*(4*M + r)*
@@ -90,7 +90,7 @@ HComponentsE = {-1/4*(A1e*A2e*KK*r*(\[Chi]2*\[Omega]1*
                 4*M*\[Chi]1*\[Omega]2 + r*\[Chi]1*\[Omega]2) - 
               \[Omega]1*\[Omega]2*(4*I + 4*M*\[Chi]1*\[Omega]2 + 
                 r*\[Chi]1*\[Omega]2))))*JS[{l1, 1}, {l2, 0}, {l, -1}]))/
-      (8*Sqrt[l*(1 + l)]), (KK*r*Sqrt[\[Lambda]2l]*
+      (16*Sqrt[l*(1 + l)]), (KK*r*Sqrt[\[Lambda]2l]*
        (A1e*Sqrt[l2*(-2 - l2 + 2*l2^2 + l2^3)]*(I*A2e*\[Chi]1*\[Omega]2 + 
           A2o*\[Chi]1*\[Chi]2*\[Omega]2 - A2e*(2*M + r)*\[Omega]1*\[Omega]2 + 
           A2e*\[Chi]2*\[Omega]1*(I + 2*M*\[Chi]1*\[Omega]2 + 
@@ -192,7 +192,7 @@ HComponentsE = {-1/4*(A1e*A2e*KK*r*(\[Chi]2*\[Omega]1*
                \[Omega]2 + 2*M*\[Chi]2*\[Omega]2 + r*\[Chi]2*\[Omega]2)))*
          JS[{l1, 1}, {l2, -1}, {l, 0}]))/16}
  
-HComponentsO = {((I/8)*KK*r*(A1e*Sqrt[l2*(1 + l2)]*
+HComponentsO = {((I/16)*KK*r*(A1e*Sqrt[l2*(1 + l2)]*
          (2*A2e*\[Omega]1*(-2*\[Chi]1*\[Omega]2 + \[Chi]2*\[Omega]2 - 
             I*(2*M + r)*\[Omega]1*\[Omega]2 + I*\[Chi]2*\[Omega]1*
              (I + 2*M*\[Chi]1*\[Omega]2 + r*\[Chi]1*\[Omega]2)) + 
@@ -262,7 +262,7 @@ HComponentsO = {((I/8)*KK*r*(A1e*Sqrt[l2*(1 + l2)]*
             \[Chi]2*(I*\[Omega]2^2 + \[Omega]1^2*(I + 4*M*\[Chi]1*\[Omega]2 + 
                 r*\[Chi]1*\[Omega]2) - \[Omega]1*\[Omega]2*(4*I + 
                 4*M*\[Chi]1*\[Omega]2 + r*\[Chi]1*\[Omega]2))))*
-         JS[{l1, 1}, {l2, 0}, {l, -1}]))/(8*Sqrt[l*(1 + l)]), 
+         JS[{l1, 1}, {l2, 0}, {l, -1}]))/(16*Sqrt[l*(1 + l)]), 
      (KK*r*Sqrt[\[Lambda]2l]*(-(A1e*Sqrt[l2*(-2 - l2 + 2*l2^2 + l2^3)]*
           ((-I)*A2o*\[Chi]1*\[Chi]2*\[Omega]2 + 
            A2e*(\[Chi]1 + I*(2*M + r)*\[Omega]1)*\[Omega]2 + 

@@ -29,6 +29,9 @@ end
 
 function make_source(sector, sol1, sol2, l1, l2, l, m1, m2, ω1, ω2; kw...)
     cf = coefficients(sector, l1, l2, l, m1, m2, ω1, ω2; kw...)
+    # The generated sources use KK with the bare 3j symbol; projecting onto
+    # Y^{l m} adds (-1)^m, m = m1 + m2 (Eq. (39) of the paper).
+    sgn = iseven(m1 + m2) ? 1.0 : -1.0
     # float(r): integer r overflows Int64 in the r^n terms of the generated sources
-    r -> (r = float(r); u1 = sol1(r); u2 = sol2(r); source(sector, cf, u1[1], u1[2], u2[1], u2[2], r))
+    r -> (r = float(r); u1 = sol1(r); u2 = sol2(r); sgn * source(sector, cf, u1[1], u1[2], u2[1], u2[2], r))
 end

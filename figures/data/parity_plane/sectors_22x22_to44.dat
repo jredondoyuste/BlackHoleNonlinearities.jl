@@ -1,0 +1,7 @@
+# Q = G M A_out^(2)/(A_1 A_2), strain amplitudes, Eq. (29); strain phases of Eq. (19) and (-1)^m' of Eq. (39) included; M = 1; r* = r + 2 log(r/2 - 1)
+# (2,2)x(2,2)->(4,4) at Momega_parent=0.404589188766 (omega' = Re omega_40); 1/2 included
+# Q(p) = (a + 2 i p b - p^2 c)/(1 + i p)^2, p = C-/C+; pole at p = +i
+# coefficient sector Re_Qin Im_Qin
+a eee 1.2451563722191160e-01 2.1659655913809309e-02
+b eoo -9.2602860074800147e-02 -6.3639487596127949e-03
+c ooe 6.5806413505649294e-02 -8.2501025604178699e-04

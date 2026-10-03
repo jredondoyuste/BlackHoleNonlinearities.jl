@@ -7,7 +7,7 @@ function self_coupling()
     for l in 2:4
         lout = 2l
         q = [quick_q("eee", (l, l, z*QNM_RE[lout]/2),
-                     (l, l, z*QNM_RE[lout]/2), lout) / 2 for z in x]
+                     (l, l, z*QNM_RE[lout]/2), lout) for z in x]
         plot!(p, x, abs.(q), marker=:circle, label="l = $l")
     end
     vline!(p, [1.0], linestyle=:dot, color=:gray, label=false)

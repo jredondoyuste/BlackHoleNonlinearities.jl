@@ -9,3 +9,5 @@ examples/output/
 *.fls
 *.log
 *.synctex.gz
+figures/output/
+__pycache__/
