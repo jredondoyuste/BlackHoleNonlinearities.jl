@@ -65,7 +65,7 @@ The scripts write PDFs to `examples/output/`.
 python figures/make_figures.py   # numpy + matplotlib; writes figures/output/
 ```
 
-The time-domain points in the self-coupling figure come from an independent time-domain evolution by Zhen Zhong.
+The time-domain points in the self-coupling figure come from an independent time-domain evolution by Zhen Zhong. In the azimuthal-dependence figure, the few cells where this code does not reach 1% accuracy are filled with Zhen Zhong's independent frequency-domain values (flagged `source=1`; the two agree to better than 1% on every common cell).
 
 
 ## Citation

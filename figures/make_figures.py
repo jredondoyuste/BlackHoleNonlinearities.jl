@@ -217,7 +217,8 @@ def fig_mdep(out):
         meta = header(p)
         a = np.loadtxt(p, ndmin=2)
         maps[(int(meta["l1"]), int(meta["l"]), meta["sector"])] = dict(
-            m1=a[:, 0].astype(int), m2=a[:, 1].astype(int), Q=a[:, 2] + 1j * a[:, 3], rel=a[:, 4])
+            m1=a[:, 0].astype(int), m2=a[:, 1].astype(int), Q=a[:, 2] + 1j * a[:, 3],
+            ok=(a[:, 4] < TOL) | (a[:, 5] == 1))  # source 1: Zhen Zhong's values where this code fails 1%
     label = {"eee": r"(+,+)\to+", "eoe": r"(+,-)\to+"}
     rows = []
     for ell in (2, 3, 4, 5):
@@ -228,10 +229,10 @@ def fig_mdep(out):
             sector = "eee" if ell_out % 2 == 0 else "eoe"
             rec = maps.get((ell, ell_out, sector))
             status = ("data\npending" if rec is None else
-                      "ok" if (rec["rel"] < TOL).any() else "fails 1%\nvalidation")
+                      "ok" if rec["ok"].any() else "fails 1%\nvalidation")
             row.append(dict(rec=rec if status == "ok" else None, l1=ell, l=ell_out, sector=sector, status=status))
         rows.append(row)
-    allq = np.concatenate([np.abs(r["Q"])[r["rel"] < TOL] for r in maps.values()])
+    allq = np.concatenate([np.abs(r["Q"])[r["ok"]] for r in maps.values()])
     norm = LogNorm(vmin=max(allq.min(), allq.max() / 1e3), vmax=allq.max())
     fig = plt.figure(figsize=(7.0, 5.6))
     outer = fig.add_gridspec(len(rows), 1, left=0.085, right=0.89, bottom=0.045, top=0.975, hspace=0.015,
@@ -259,8 +260,8 @@ def fig_mdep(out):
                 continue
             ms = np.arange(-slot["l1"], slot["l1"] + 1)
             A = np.full((len(ms), len(ms)), np.nan)
-            for a_, b_, q, rel in zip(r["m1"], r["m2"], np.abs(r["Q"]), r["rel"]):
-                if rel < TOL:
+            for a_, b_, q, ok in zip(r["m1"], r["m2"], np.abs(r["Q"]), r["ok"]):
+                if ok:
                     A[b_ + slot["l1"], a_ + slot["l1"]] = q
             im = ax.pcolormesh(ms, ms, A, cmap="viridis", norm=norm, shading="nearest", rasterized=True)
             ax.set_aspect("equal")
