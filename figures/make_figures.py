@@ -186,27 +186,54 @@ def fig_resonance(out):
     plt.close(fig)
 
 
-def fig_selfcoup(out, td_data=None):
+SELFCOUP_STYLE = {2: ("#1F4E9C", "o"), 3: ("#0E8A6E", "s"), 4: ("#D97706", "D"),
+                  5: ("#C8102E", "^"), 6: ("#7B4EA8", "v")}
+
+
+def selfcoup_table(folder, l1, kind):
+    """(Momega_parent, Q) of folder/eee_<l1 l1>_<l1 l1>_<2 l1>_<kind>.dat (Zhen Zhong's tables), or None."""
+    path = Path(folder) / f"eee_{l1}{l1}_{l1}{l1}_{2 * l1}_{kind}.dat"
+    if not path.exists():
+        return None
+    a = np.loadtxt(path, ndmin=2)
+    # columns: w ReQ ImQ relerr, or Momega_parent Momega_child x_plot Re_Q Im_Q ...
+    re_q, im_q = (a[:, 3], a[:, 4]) if "Momega_child" in path.read_text() else (a[:, 1], a[:, 2])
+    return a[:, 0], re_q + 1j * im_q
+
+
+def fig_selfcoup(out, td_dir=None):
     recs = sorted(channels("selfcoup"), key=lambda r: r.l1)
-    shades = dict(zip([r.l1 for r in recs], np.linspace(-0.30, 0.45, len(recs))))
-    fig, ax = plt.subplots(figsize=(COLW, 2.5))
-    xmax = 0.0
+    fig, ax = plt.subplots(figsize=(COLW, 3.3))
+    xmax, ymin, ymax, handles, labels = 1.2, np.inf, 0.0, [], []
     for r in recs:
-        k = r.trusted
-        xmax = max(xmax, r.x[k].max())
-        ax.plot(r.x, np.where(k, r.absQ, np.nan), color=shade("#1F77B4", shades[r.l1]), lw=1.3,
-                marker="s", ms=2.2, label=rf"$\ell={r.l1}\!\to\!{r.l}$", zorder=3)
-    if td_data:
-        w, re_q, im_q = np.loadtxt(td_data, unpack=True, usecols=(0, 1, 2))
-        ax.plot(2 * w / QNM_RE_OMEGA[4], np.hypot(re_q, im_q), ls="none", marker="o", ms=3.0, mfc="none",
-                mec="#C8102E", mew=0.7, label=r"$\ell=2\!\to\!4$, time domain", zorder=4)
+        col, mk = SELFCOUP_STYLE[r.l1]
+        w, Q = r.w[r.trusted], r.Q[r.trusted]
+        hp = selfcoup_table(DATA / "selfcoup_hp", r.l1, "FD")  # extends the curve where this code fails 1%
+        if hp is not None:
+            k = (hp[0] < w.min()) | (hp[0] > w.max())
+            w, Q = np.concatenate([w, hp[0][k]]), np.concatenate([Q, hp[1][k]])
+            w, Q = w[np.argsort(w)], Q[np.argsort(w)]
+        x = 2 * w / QNM_RE_OMEGA[r.l]
+        ymin, ymax = min(ymin, np.abs(Q)[x <= xmax].min()), max(ymax, np.abs(Q).max())
+        h, = ax.plot(x, np.abs(Q), color=col, lw=1.3, zorder=3)
+        td = selfcoup_table(td_dir, r.l1, "TD") if td_dir else None
+        if td is not None:
+            k = (td[0] >= w.min() - 1e-9) & (td[0] <= w.max() + 1e-9)  # only points on the curve
+            h = (h, ax.plot(2 * td[0][k] / QNM_RE_OMEGA[r.l], np.abs(td[1][k]), ls="none", marker=mk, ms=3.2,
+                            mfc="none", mec=col, mew=0.7, zorder=4)[0])
+        handles.append(h)
+        labels.append(rf"$\ell={r.l1}\!\to\!{r.l}$")
+    handles += [plt.Line2D([], [], color="0.35", lw=1.3),
+                plt.Line2D([], [], ls="none", marker="o", ms=3.2, mfc="none", mec="0.35", mew=0.7)]
+    labels += ["frequency domain", "time domain"]
     ax.axvline(1.0, color="0.5", ls=":", lw=0.7, zorder=0)
     ax.set_yscale("log")
-    ax.set_ylim(bottom=3e-3)
-    ax.set_xlim(right=xmax + 0.01)
+    ax.set_xlim(right=xmax)
+    ax.set_ylim(0.8 * ymin, 1.25 * ymax)
     ax.set_xlabel(r"$\omega'/\mathrm{Re}[\omega_{\ell'0}]$")
     ax.set_ylabel(QLABEL)
-    ax.legend(loc="upper left", fontsize=5.6, ncol=2, handlelength=1.3, columnspacing=0.9, labelspacing=0.2)
+    ax.legend(handles, labels, loc="upper left", fontsize=7.5, ncol=2, handlelength=1.8, columnspacing=1.0,
+              labelspacing=0.3)
     fig.savefig(out / "results_selfcoup.pdf")
     plt.close(fig)
 
@@ -417,8 +444,8 @@ def fig_accuracy(out):
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--outdir", type=Path, default=Path(__file__).resolve().parent / "output")
-    parser.add_argument("--td-data", type=Path, default=DATA / "selfcoup_time_domain" / "eee_22_22_4_TD.dat",
-                        help="time-domain table (w ReQ ImQ ...) overlaid on the self-coupling figure")
+    parser.add_argument("--td-data", type=Path, default=DATA / "selfcoup_time_domain",
+                        help="folder of time-domain tables eee_<l l>_<l l>_<2l>_TD.dat overlaid on the self-coupling figure")
     args = parser.parse_args()
     args.outdir.mkdir(parents=True, exist_ok=True)
     style()
